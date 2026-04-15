@@ -5,6 +5,8 @@
  */
 package Teacher;
 
+import student.login;
+
 /**
  *
  * @author Jon-Jon
@@ -15,6 +17,12 @@ public class enrolledstudent extends javax.swing.JFrame {
      * Creates new form enrolledstudent
      */
     public enrolledstudent() {
+    if (student.session.fullname == null || student.session.fullname.isEmpty()) {
+        javax.swing.JOptionPane.showMessageDialog(null, "Access Denied! Please login first.");
+        new login().setVisible(true);
+        this.dispose();
+        return;
+    }
         initComponents();
         displayEnrolledData(); // Add this line
     }

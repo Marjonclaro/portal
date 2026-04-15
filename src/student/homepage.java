@@ -25,6 +25,20 @@ public class homepage extends javax.swing.JFrame {
     name.setText(session.fullname);
     user.setText(session.usertype);
     }
+    
+    public void showMySchedule() {
+    // Get the student's name from the session
+    String studentName = student.session.fullname; 
+    
+    // This query pulls your enrolled subjects and their schedule (time/days)
+    String sql = "SELECT e.subject_title AS 'Subject', s.time AS 'Time', s.days AS 'Days', s.assigned_teache AS 'Instructor' "
+               + "FROM enrollments e "
+               + "INNER JOIN subjects s ON e.subject_title = s.title "
+               + "WHERE e.student_name = '" + studentName + "'";
+    
+    config.spconfig conf = new config.spconfig();
+    conf.displayData(sql, jTable1); // Displays it in the table you already have
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -54,6 +68,8 @@ public class homepage extends javax.swing.JFrame {
         user = new javax.swing.JLabel();
         jDesktopPane1 = new javax.swing.JDesktopPane();
         jLabel5 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
 
         jScrollPane2.setViewportView(jTextPane2);
 
@@ -113,6 +129,11 @@ public class homepage extends javax.swing.JFrame {
 
         jButton7.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton7.setText("Grades");
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
         getContentPane().add(jButton7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 190, 220, 30));
 
         name.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -129,13 +150,39 @@ public class homepage extends javax.swing.JFrame {
         jDesktopPane1.add(jLabel5);
         jLabel5.setBounds(0, 0, 260, 500);
 
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(jTable1);
+
+        jDesktopPane1.add(jScrollPane1);
+        jScrollPane1.setBounds(420, 80, 452, 402);
+
         getContentPane().add(jDesktopPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1000, 500));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
+    String studentName = student.session.fullname; 
+    
+    // This query connects your enrollment to the master schedule
+    String sql = "SELECT s.code AS 'Code', s.title AS 'Subject', "
+               + "s.time AS 'Time', s.days AS 'Days', s.room AS 'Room' "
+               + "FROM enrollments e "
+               + "INNER JOIN subjects s ON e.subject_title = s.title "
+               + "WHERE e.student_name = '" + studentName + "'";
+    
+    config.spconfig conf = new config.spconfig();
+    conf.displayData(sql, jTable1);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -154,6 +201,11 @@ public class homepage extends javax.swing.JFrame {
     prof.setVisible(true);
     this.dispose();
     }//GEN-LAST:event_jButton11ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+    new grades().setVisible(true); // Opens the grades window
+    this.dispose(); // Closes the current homepage
+    }//GEN-LAST:event_jButton7ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -206,7 +258,9 @@ public class homepage extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar2;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTable jTable1;
     private javax.swing.JTextPane jTextPane2;
     private javax.swing.JLabel name;
     private javax.swing.JLabel user;

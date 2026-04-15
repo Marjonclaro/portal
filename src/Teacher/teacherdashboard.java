@@ -19,16 +19,27 @@ public class teacherdashboard extends javax.swing.JFrame {
      * Creates new form teacherdashboard
      */
     public teacherdashboard() {
+    if (student.session.fullname == null || student.session.fullname.isEmpty()) {
+        javax.swing.JOptionPane.showMessageDialog(null, "Access Denied! Please login first.");
+        new login().setVisible(true);
+        this.dispose();
+        return;
+    }
         initComponents();
         displayMyStudents();
     }
     private void displayMyStudents() {
-   String teacherName = lblname.getText().trim(); 
+    String teacherName = student.session.fullname; 
+    lblname.setText(teacherName); 
 
-    // IMPORTANT: Your DB uses 'assigned_teache' (missing the 'r')
-    String sql = "SELECT student_name AS 'Student Name', title AS 'Subject', student_id AS 'ID' "
-               + "FROM subjects "
-               + "WHERE assigned_teache = '" + teacherName + "'";
+    // Added g.prefinal to the SELECT list
+    String sql = "SELECT e.enrollment_id AS 'ID', e.student_name AS 'Student', e.subject_title AS 'Subject', "
+               + "g.prelim AS 'Prelim', g.midterm AS 'Midterm', g.prefinal AS 'Pre-Final', "
+               + "g.final_grade AS 'Final', g.average AS 'Average', g.remarks AS 'Remarks' "
+               + "FROM enrollments e "
+               + "INNER JOIN subjects s ON e.subject_title = s.title "
+               + "LEFT JOIN grades g ON e.enrollment_id = g.student_id AND e.subject_title = g.subject_title "
+               + "WHERE s.assigned_teache = '" + teacherName + "'";
     
     config.spconfig conf = new config.spconfig();
     conf.displayData(sql, StudentTable);
@@ -90,7 +101,7 @@ public class teacherdashboard extends javax.swing.JFrame {
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("Admin Portal");
+        jLabel2.setText("Teacher Portal");
         getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 30, 130, 20));
 
         jLabel12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/iconify-icon.png"))); // NOI18N
@@ -187,15 +198,14 @@ public class teacherdashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_SearchBarActionPerformed
 
     private void SEARCHActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SEARCHActionPerformed
-String find = SearchBar.getText().trim();
-    // Use the label name directly to ensure it matches the 'ada' record in your DB
-    String teacherName = lblname.getText().trim(); 
+    String find = SearchBar.getText().trim();
+    String teacherName = student.session.fullname; 
     
-    // We query the 'subjects' table because it has the student_name and assigned_teache columns
-    String sql = "SELECT student_id AS 'ID', student_name AS 'Student Name', title AS 'Subject' "
-               + "FROM subjects "
-               + "WHERE assigned_teache = '" + teacherName + "' "
-               + "AND (student_name LIKE '%" + find + "%' OR title LIKE '%" + find + "%')";
+    String sql = "SELECT e.student_id AS 'ID', e.student_name AS 'Student Name', e.subject_title AS 'Subject' "
+               + "FROM enrollments e "
+               + "INNER JOIN subjects s ON e.subject_title = s.title "
+               + "WHERE s.assigned_teache = '" + teacherName + "' "
+               + "AND (e.student_name LIKE '%" + find + "%' OR e.subject_title LIKE '%" + find + "%')";
     
     config.spconfig conf = new config.spconfig();
     conf.displayData(sql, StudentTable);
@@ -203,36 +213,37 @@ String find = SearchBar.getText().trim();
 
     private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
 int row = StudentTable.getSelectedRow();
-    
-    if (row == -1) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Select a student to grade first!");
-        return;
-    }
+    if (row == -1) return;
 
-    // Get info from your table rows based on the display query above
-    String sName = StudentTable.getValueAt(row, 0).toString();  // Student Name
-    String sSubject = StudentTable.getValueAt(row, 1).toString(); // Subject
-    String sID = StudentTable.getValueAt(row, 2).toString();      // Student ID
+    // Get the identifying data from your JTable
+    String sID = StudentTable.getValueAt(row, 0).toString();  
+    String sName = StudentTable.getValueAt(row, 1).toString();
+    String sSubject = StudentTable.getValueAt(row, 2).toString();
 
     try {
-        double p = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Enter Prelim:"));
-        double m = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Enter Midterm:"));
-        double f = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Enter Final:"));
+        // Simple Input Dialogs for the grades
+        double p = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Prelim:"));
+        double m = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Midterm:"));
+        double pf = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Pre-Final:"));
+        double f = Double.parseDouble(javax.swing.JOptionPane.showInputDialog("Final:"));
         
-        double avg = (p + m + f) / 3;
+        double avg = (p + m + pf + f) / 4;
         String rem = (avg >= 75) ? "Passed" : "Failed";
 
-        // This SQL matches your 8-column 'grades' table structure
-        String sql = "INSERT INTO grades (student_name, subject_title, prelim, midterm, final_grade, average, remarks, student_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        // THE FIX: One single command that updates if exists, or inserts if new
+        String sql = "INSERT OR REPLACE INTO grades "
+                   + "(student_id, subject_title, student_name, prelim, midterm, prefinal, final_grade, average, remarks) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         config.spconfig conf = new config.spconfig();
-        conf.addRecord(sql, sName, sSubject, p, m, f, avg, rem, sID);
+        // This uses your existing addRecord method which you know works
+        conf.addRecord(sql, sID, sSubject, sName, p, m, pf, f, avg, rem);
         
-        javax.swing.JOptionPane.showMessageDialog(this, "Grade successfully saved for ID: " + sID);
+        javax.swing.JOptionPane.showMessageDialog(this, "Grades updated!");
+        displayMyStudents(); // Refresh to show the edited row
         
     } catch (Exception e) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Please enter numeric grades only.");
+        javax.swing.JOptionPane.showMessageDialog(this, "Error: Please enter numbers only.");
     }
     }//GEN-LAST:event_jToggleButton1ActionPerformed
 

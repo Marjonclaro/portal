@@ -222,27 +222,47 @@ public class Studentmanagement extends javax.swing.JFrame {
     }//GEN-LAST:event_SEARCHActionPerformed
 
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-        int row = StudentTable.getSelectedRow();
-        if (row == -1) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Please select a student to delete.");
-        } else {
-            String id = StudentTable.getValueAt(row, 0).toString();
-            int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "Delete Student ID: " + id + "?", "Confirm", javax.swing.JOptionPane.YES_NO_OPTION);
+int row = StudentTable.getSelectedRow();
+    if (row == -1) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Please select a student to archive.");
+        return;
+    }
 
-            if (confirm == javax.swing.JOptionPane.YES_OPTION) {
-                config.spconfig conf = new config.spconfig();
-                // Assuming your column in DB is 'student_id'
-                String sql = "DELETE FROM users WHERE student_id = ?";
-                // You might need to add a generic executeQuery method in spconfig or use connection here
-                try {
-                    java.sql.Connection conn = config.spconfig.connectDB();
-                    java.sql.PreparedStatement pst = conn.prepareStatement(sql);
-                    pst.setString(1, id);
-                    pst.executeUpdate();
-                    showStudentData(); // Refresh table
-                } catch (Exception e) { System.out.println(e); }
-            }
+    String id = StudentTable.getValueAt(row, 0).toString();
+    String name = StudentTable.getValueAt(row, 1).toString();
+    String email = StudentTable.getValueAt(row, 2).toString();
+    String role = StudentTable.getValueAt(row, 3).toString();
+
+    int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
+        "Are you sure you want to archive Student: " + name + "?", 
+        "Confirm Archive", javax.swing.JOptionPane.YES_NO_OPTION);
+
+    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+        try {
+            java.sql.Connection conn = config.spconfig.connectDB();
+            
+            // STEP 1: Copy to Archive Table
+            String archiveSql = "INSERT INTO archive (student_id, name, email, role) VALUES (?, ?, ?, ?)";
+            java.sql.PreparedStatement pstArchive = conn.prepareStatement(archiveSql);
+            pstArchive.setString(1, id);
+            pstArchive.setString(2, name);
+            pstArchive.setString(3, email);
+            pstArchive.setString(4, role);
+            pstArchive.executeUpdate();
+
+            // STEP 2: Delete from Users Table
+            String deleteSql = "DELETE FROM users WHERE student_id = ?";
+            java.sql.PreparedStatement pstDelete = conn.prepareStatement(deleteSql);
+            pstDelete.setString(1, id);
+            pstDelete.executeUpdate();
+
+            javax.swing.JOptionPane.showMessageDialog(this, "Student moved to Archive successfully.");
+            showStudentData(); // Refresh your table
+            
+        } catch (Exception e) { 
+            System.out.println("Archive Error: " + e); 
         }
+    }
     }//GEN-LAST:event_deleteActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -257,7 +277,12 @@ public class Studentmanagement extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
+       // Create the new Subject Management Frame
+        archive sm = new archive();
+        sm.setVisible(true);
+
+        // Close the current Student Management Frame
+        this.dispose();
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void SearchBarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SearchBarActionPerformed

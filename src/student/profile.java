@@ -43,6 +43,7 @@ public class profile extends javax.swing.JFrame {
     fullname.setText(" Name: " + student.session.fullname);
     usertype.setText(" Role: " + student.session.usertype);
     email.setText(" Email: " + student.session.email);
+    email.setText(" Email: " + student.session.email);
     profileImage.setText(student.session.profileImage);
 }
 

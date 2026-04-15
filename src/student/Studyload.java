@@ -11,6 +11,7 @@ package student;
  */
 public class Studyload extends javax.swing.JFrame {
 
+
     /**
      * Creates new form Studyload
      */
@@ -53,8 +54,6 @@ public class Studyload extends javax.swing.JFrame {
         jButton3 = new javax.swing.JButton();
         jLabel20 = new javax.swing.JLabel();
         jButton7 = new javax.swing.JButton();
-        jLabel21 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         name = new javax.swing.JLabel();
         user = new javax.swing.JLabel();
@@ -119,19 +118,12 @@ public class Studyload extends javax.swing.JFrame {
 
         jButton7.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton7.setText("Grades");
-        jDesktopPane1.add(jButton7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, 220, 30));
-
-        jLabel21.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/iconify-icon (6).png"))); // NOI18N
-        jDesktopPane1.add(jLabel21, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 100, -1, 40));
-
-        jButton1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jButton1.setText("Announcement");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                jButton7ActionPerformed(evt);
             }
         });
-        jDesktopPane1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, 220, 40));
+        jDesktopPane1.add(jButton7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, 220, 30));
 
         jLabel5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/red.jpg"))); // NOI18N
         jLabel5.setText("jLabel5");
@@ -186,70 +178,54 @@ public class Studyload extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton3ActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-   // 1. Create the target frame (using 'homepage' based on your folder image)
-    homepage home = new homepage(); 
+   // 1. Create a new instance of Studyload
+    homepage sl = new homepage();
     
-    // 2. Show the announcement/home screen
-    home.setVisible(true);
+    // 2. Make the new frame visible
+    sl.setVisible(true);
     
-    // 3. Close the current Studyload frame
+    // 3. Close the current frame to 'refresh' the view
     this.dispose();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
 String sName = student.session.fullname;
-    
-    // 1. Fetch available subjects AND their assigned teachers from the database
-    // We use a Map to store Title as Key and Teacher as Value
     java.util.Map<String, String> subjectMap = new java.util.HashMap<>();
+    
+    // Correctly fetch subject and teacher
     String sqlFetch = "SELECT title, assigned_teache FROM subjects"; 
     
     try (java.sql.Connection conn = config.spconfig.connectDB();
          java.sql.PreparedStatement pstmt = conn.prepareStatement(sqlFetch);
          java.sql.ResultSet rs = pstmt.executeQuery()) {
-        
         while (rs.next()) {
             subjectMap.put(rs.getString("title"), rs.getString("assigned_teache"));
         }
     } catch (java.sql.SQLException e) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Error loading subjects: " + e.getMessage());
         return;
     }
 
-    if (subjectMap.isEmpty()) {
-        javax.swing.JOptionPane.showMessageDialog(this, "No subjects found.");
-        return;
-    }
-
-    // 2. Display the dropdown menu
     Object[] selectionValues = subjectMap.keySet().toArray();
-    String sSubject = (String) javax.swing.JOptionPane.showInputDialog(
-                        this,
-                        "Choose a subject to register:",
-                        "Available Subjects",
-                        javax.swing.JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        selectionValues,
-                        selectionValues[0]);
+    String sSubject = (String) javax.swing.JOptionPane.showInputDialog(this, "Select Subject:", "Registration", 3, null, selectionValues, selectionValues[0]);
 
-    // 3. If a subject was selected, save it with the teacher's name
-    if (sSubject != null && !sSubject.trim().isEmpty()) {
-        String sTeacher = subjectMap.get(sSubject); // Get the teacher for the selected subject
-        config.spconfig conf = new config.spconfig();
-        
-        // Update your enrollment SQL to include the teacher
+    if (sSubject != null) {
+        String sTeacher = subjectMap.get(sSubject);
         String sqlInsert = "INSERT INTO enrollments (student_name, subject_title, assigned_teache) VALUES (?, ?, ?)";
-        conf.addRecord(sqlInsert, sName, sSubject, sTeacher); 
-        
-        javax.swing.JOptionPane.showMessageDialog(this, "Registered for " + sSubject + " under " + sTeacher);
-        
-        showMyEnrolledSubjects(); // Refresh your table
+        new config.spconfig().addRecord(sqlInsert, sName, sSubject, sTeacher); 
+        showMyEnrolledSubjects(); 
     }
     }//GEN-LAST:event_jButton6ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+   // 1. Create a new instance of Studyload
+    grades sl = new grades();
+    
+    // 2. Make the new frame visible
+    sl.setVisible(true);
+    
+    // 3. Close the current frame to 'refresh' the view
+    this.dispose();
+    }//GEN-LAST:event_jButton7ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -295,7 +271,6 @@ String sName = student.session.fullname;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
@@ -307,7 +282,6 @@ String sName = student.session.fullname;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
-    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
